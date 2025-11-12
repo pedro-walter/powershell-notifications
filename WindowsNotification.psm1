@@ -1,9 +1,9 @@
-function Registrar-PowerShellParaNotificacoes {
+function Register-PowerShellParaNotificacoes {
     [CmdletBinding()]
     param()
     
     try {
-        # Verificar se podemos registrar o PowerShell no registro para notificações
+        # Verificar se podemos registrar o PowerShell no registro para notifica��es
         $caminhoRegistro = "HKCU:\SOFTWARE\Classes\AppUserModelId"
         $idAplicativo = "PowerShell.Notificacoes"
         $caminhoAplicativo = "$caminhoRegistro\$idAplicativo"
@@ -14,28 +14,29 @@ function Registrar-PowerShellParaNotificacoes {
         
         if (-not (Test-Path $caminhoAplicativo)) {
             New-Item -Path $caminhoAplicativo -Force | Out-Null
-            Set-ItemProperty -Path $caminhoAplicativo -Name "DisplayName" -Value "Notificações PowerShell"
+            # Se for mudar o -Value do pr�ximo comando tem que rodar o clear-registration.ps1 e reiniciar o computador
+            Set-ItemProperty -Path $caminhoAplicativo -Name "DisplayName" -Value "Notifica��es PowerShell"
             Set-ItemProperty -Path $caminhoAplicativo -Name "IconUri" -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-            Write-Verbose "PowerShell registrado para notificações"
+            Write-Verbose "PowerShell registrado para notifica��es"
             return $idAplicativo
         }
         
         return $idAplicativo
     }
     catch {
-        Write-Verbose "Não foi possível registrar o PowerShell para notificações: $($_.Exception.Message)"
+        Write-Verbose "N�o foi poss�vel registrar o PowerShell para notifica��es: $($_.Exception.Message)"
         return $null
     }
 }
 
-function Exibir-NotificacaoWindows {
+function Show-NotificacaoWindows {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [string]$Mensagem,
         
         [Parameter(Mandatory = $false)]
-        [string]$Titulo = "Notificação",
+        [string]$Titulo = "Notifica��o",
         
         [Parameter(Mandatory = $false)]
         [switch]$UsarFallback,
@@ -44,15 +45,15 @@ function Exibir-NotificacaoWindows {
         [switch]$Persistente
     )
     
-    # Primeiro tenta o método de notificação Toast moderna
+    # Primeiro tenta o m�todo de notifica��o Toast moderna
     if (-not $UsarFallback) {
         try {
-            Write-Verbose "Tentando notificação toast moderna..."
+            Write-Verbose "Tentando notifica��o toast moderna..."
             
-            # Verificar se as notificações estão habilitadas
+            # Verificar se as notifica��es est�o habilitadas
             $configuracaoNotificacao = Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -ErrorAction SilentlyContinue
             if ($configuracaoNotificacao -and $configuracaoNotificacao.ToastEnabled -eq 0) {
-                Write-Warning "Notificações do Windows estão desabilitadas nas configurações do sistema"
+                Write-Warning "Notifica��es do Windows est�o desabilitadas nas configura��es do sistema"
             }
             
             Add-Type -AssemblyName System.Windows.Forms
@@ -60,10 +61,10 @@ function Exibir-NotificacaoWindows {
             [Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
             [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
 
-            # Primeiro tenta registrar o PowerShell para notificações
-            $idAplicativoRegistrado = Registrar-PowerShellParaNotificacoes
+            # Primeiro tenta registrar o PowerShell para notifica��es
+            $idAplicativoRegistrado = Register-PowerShellParaNotificacoes
             
-            # Tenta múltiplos IDs de aplicativo em ordem de preferência
+            # Tenta m�ltiplos IDs de aplicativo em ordem de prefer�ncia
             $idsAplicativo = @()
             if ($idAplicativoRegistrado) { $idsAplicativo += $idAplicativoRegistrado }
             $idsAplicativo += @(
@@ -76,7 +77,7 @@ function Exibir-NotificacaoWindows {
             
             $idAplicativoSucesso = $null
             
-            # Criar templates diferentes para notificações persistentes vs normais
+            # Criar templates diferentes para notifica��es persistentes vs normais
             if ($Persistente) {
                 $template = @"
 <toast scenario="reminder" activationType="foreground">
@@ -106,7 +107,7 @@ function Exibir-NotificacaoWindows {
 "@
             }
 
-            # Tenta cada ID de aplicativo até que um funcione
+            # Tenta cada ID de aplicativo at� que um funcione
             foreach ($idAplicativo in $idsAplicativo) {
                 try {
                     Write-Verbose "Tentando ID do aplicativo: $idAplicativo"
@@ -116,7 +117,7 @@ function Exibir-NotificacaoWindows {
                     
                     $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
                     
-                    # Só define tempo de expiração para notificações não persistentes
+                    # S� define tempo de expira��o para notifica��es n�o persistentes
                     if (-not $Persistente) {
                         $toast.ExpirationTime = [DateTimeOffset]::Now.AddMinutes(5)
                     }
@@ -136,20 +137,20 @@ function Exibir-NotificacaoWindows {
             if ($idAplicativoSucesso) {
                 # Aguarda um momento para ver se realmente aparece
                 Start-Sleep -Milliseconds 500
-                Write-Verbose "Notificação toast enviada com sucesso com ID do aplicativo '$idAplicativoSucesso': $Titulo - $Mensagem"
+                Write-Verbose "Notifica��o toast enviada com sucesso com ID do aplicativo '$idAplicativoSucesso': $Titulo - $Mensagem"
                 return $true
             } else {
-                throw "Todos os IDs de aplicativo falharam para notificação toast"
+                throw "Todos os IDs de aplicativo falharam para notifica��o toast"
             }
         }
         catch {
-            Write-Warning "Notificação toast falhou: $($_.Exception.Message). Tentando método fallback..."
+            Write-Warning "Notifica��o toast falhou: $($_.Exception.Message). Tentando m�todo fallback..."
         }
     }
     
-    # Fallback: Usar Windows Forms NotifyIcon (balão da bandeja do sistema)
+    # Fallback: Usar Windows Forms NotifyIcon (bal�o da bandeja do sistema)
     try {
-        Write-Verbose "Usando fallback de notificação balão da bandeja do sistema..."
+        Write-Verbose "Usando fallback de notifica��o bal�o da bandeja do sistema..."
         
         Add-Type -AssemblyName System.Windows.Forms
         Add-Type -AssemblyName System.Drawing
@@ -158,25 +159,25 @@ function Exibir-NotificacaoWindows {
         $icone.Icon = [System.Drawing.SystemIcons]::Information
         $icone.Visible = $true
         
-        # Notificações balão não podem ser verdadeiramente persistentes, mas podemos fazê-las durar mais
+        # Notifica��es bal�o n�o podem ser verdadeiramente persistentes, mas podemos faz�-las durar mais
         $duracao = if ($Persistente) { 30000 } else { 5000 }  # 30 segundos vs 5 segundos
         $icone.ShowBalloonTip($duracao, $Titulo, $Mensagem, [System.Windows.Forms.ToolTipIcon]::Info)
         
-        # Limpar após um tempo
+        # Limpar ap�s um tempo
         Start-Sleep -Seconds 1
         $icone.Dispose()
         
         if ($Persistente) {
-            Write-Verbose "Notificação balão de longa duração enviada (30s): $Titulo - $Mensagem"
+            Write-Verbose "Notifica��o bal�o de longa dura��o enviada (30s): $Titulo - $Mensagem"
         } else {
-            Write-Verbose "Notificação balão enviada com sucesso: $Titulo - $Mensagem"
+            Write-Verbose "Notifica��o bal�o enviada com sucesso: $Titulo - $Mensagem"
         }
         return $true
     }
     catch {
-        Write-Error "Todos os métodos de notificação falharam. Último erro: $($_.Exception.Message)"
+        Write-Error "Todos os m�todos de notifica��o falharam. �ltimo erro: $($_.Exception.Message)"
         return $false
     }
 }
 
-Export-ModuleMember -Function Exibir-NotificacaoWindows, Registrar-PowerShellParaNotificacoes
+Export-ModuleMember -Function Show-NotificacaoWindows, Register-PowerShellParaNotificacoes

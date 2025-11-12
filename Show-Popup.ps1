@@ -1,15 +1,15 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "A mensagem a ser exibida na notifica√ß√£o")]
+    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "A mensagem a ser exibida na notificaÁ„o")]
     [string]$Mensagem,
     
-    [Parameter(Mandatory = $false, Position = 1, HelpMessage = "O t√≠tulo da notifica√ß√£o")]
-    [string]$Titulo = "Notifica√ß√£o",
+    [Parameter(Mandatory = $false, Position = 1, HelpMessage = "O tÌtulo da notificaÁ„o")]
+    [string]$Titulo = "NotificaÁ„o",
     
-    [Parameter(Mandatory = $false, HelpMessage = "Usar bal√£o da bandeja do sistema como fallback em vez de notifica√ß√£o toast")]
+    [Parameter(Mandatory = $false, HelpMessage = "Usar bal„o da bandeja do sistema como fallback em vez de notificaÁ„o toast")]
     [switch]$UsarFallback,
     
-    [Parameter(Mandatory = $false, HelpMessage = "Tornar a notifica√ß√£o persistente (s√≥ desaparece quando dispensada manualmente)")]
+    [Parameter(Mandatory = $false, HelpMessage = "Tornar a notificaÁ„o persistente (sÛ desaparece quando dispensada manualmente)")]
     [switch]$Persistente
 )
 
@@ -19,21 +19,21 @@ try {
     $CaminhoModulo = Join-Path $PSScriptRoot "WindowsNotification.psm1"
     
     if (-not (Test-Path $CaminhoModulo)) {
-        throw "M√≥dulo WindowsNotification n√£o encontrado em: $CaminhoModulo"
+        throw "MÛdulo WindowsNotification n„o encontrado em: $CaminhoModulo"
     }
     
     Import-Module $CaminhoModulo -Force
     
-    $resultado = Exibir-NotificacaoWindows -Mensagem $Mensagem -Titulo $Titulo -UsarFallback:$UsarFallback -Persistente:$Persistente
+    $resultado = Show-NotificacaoWindows -Mensagem $Mensagem -Titulo $Titulo -UsarFallback:$UsarFallback -Persistente:$Persistente
     
     if ($resultado) {
-        Write-Host "Notifica√ß√£o enviada com sucesso!" -ForegroundColor Green
+        Write-Host "NotificaÁ„o enviada com sucesso!" -ForegroundColor Green
     } else {
-        Write-Host "Falha ao enviar notifica√ß√£o." -ForegroundColor Red
+        Write-Host "Falha ao enviar notificaÁ„o." -ForegroundColor Red
         exit 1
     }
 }
 catch {
-    Write-Error "Erro ao enviar notifica√ß√£o: $($_.Exception.Message)"
+    Write-Error "Erro ao enviar notificaÁ„o: $($_.Exception.Message)"
     exit 1
 }

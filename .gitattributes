@@ -1,0 +1,15 @@
+# PowerShell files should use Windows-1252 for proper Portuguese character display
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf  
+*.psd1 text eol=crlf
+
+# Markdown files should use UTF-8
+*.md text eol=crlf encoding=UTF-8
+
+# Ensure line endings are consistent
+* text=auto eol=crlf
+
+# Binary files
+*.exe binary
+*.dll binary
+*.ico binary

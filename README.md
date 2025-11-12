@@ -2,6 +2,31 @@
 
 Este projeto fornece um sistema robusto de notificações para Windows 11/10 usando PowerShell, com suporte a notificações toast modernas e fallback para balões do sistema.
 
+## ⚠️ IMPORTANTE: Codificação de Arquivos
+
+**Para que os acentos e caracteres especiais do português funcionem corretamente, todos os arquivos `.ps1` e `.psm1` DEVEM ser salvos com codificação Windows-1252 (também conhecida como ANSI ou Latin-1).**
+
+### Por que Windows-1252?
+
+O console PowerShell no Windows usa codificação CP850/CP437 (Europa Ocidental DOS) por padrão. Arquivos salvos em UTF-8 terão caracteres portugueses (ç, ã, õ, á, etc.) exibidos incorretamente como `��ǜo` ou `Ã§Ã£o`.
+
+### Como configurar no VS Code:
+
+1. Abra o arquivo `.ps1` ou `.psm1`
+2. No canto inferior direito, clique no encoding atual (normalmente "UTF-8")
+3. Selecione "Save with Encoding" (Salvar com Codificação)
+4. Escolha "Western (Windows 1252)"
+
+### Como configurar em outros editores:
+
+- **Notepad++**: Menu Encoding > Character Sets > Western European > Windows-1252
+- **Sublime Text**: File > Save with Encoding > Western (Windows 1252)
+- **Notepad**: Automático ao salvar (usa ANSI por padrão)
+
+### Verificação:
+
+Após salvar com Windows-1252, strings como `"notificação"` devem aparecer corretamente no console e nas notificações.
+
 ## Arquivos Incluídos
 
 - **WindowsNotification.psm1** - Módulo PowerShell com funções de notificação
