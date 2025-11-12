@@ -52,13 +52,13 @@ Após salvar com Windows-1252, strings como `"notificação"` devem aparecer cor
 
 ```powershell
 # Notificação persistente (só desaparece quando fechada manualmente)
-.\Show-Popup.ps1 "Lembrete importante!" "Urgente" -Sticky
+.\Show-Popup.ps1 "Lembrete importante!" "Urgente" -Persistente
 
 # Forçar uso do método fallback (balão do sistema)
-.\Show-Popup.ps1 "Mensagem de fallback" "Teste" -UseFallback
+.\Show-Popup.ps1 "Mensagem de fallback" "Teste" -UsarFallback
 
 # Combinação: notificação persistente com fallback
-.\Show-Popup.ps1 "Aviso crítico" "Sistema" -Sticky -UseFallback
+.\Show-Popup.ps1 "Aviso crítico" "Sistema" -Persistente -UsarFallback
 
 # Com saída detalhada para depuração
 .\Show-Popup.ps1 "Mensagem de teste" "Debug" -Verbose
@@ -68,10 +68,10 @@ Após salvar com Windows-1252, strings como `"notificação"` devem aparecer cor
 
 | Parâmetro | Tipo | Obrigatório | Descrição |
 |-----------|------|-------------|-----------|
-| `Message` | String | Sim | Texto da notificação |
-| `Title` | String | Não | Título da notificação (padrão: "Notification") |
-| `-Sticky` | Switch | Não | Torna a notificação persistente |
-| `-UseFallback` | Switch | Não | Force o uso de balões do sistema |
+| `Mensagem` | String | Sim | Texto da notificação |
+| `Titulo` | String | Não | Título da notificação (padrão: "Notificação") |
+| `-Persistente` | Switch | Não | Torna a notificação persistente |
+| `-UsarFallback` | Switch | Não | Força o uso de balões do sistema |
 | `-Verbose` | Switch | Não | Exibe informações detalhadas |
 
 ## Uso Direto do Módulo
@@ -83,8 +83,8 @@ Você também pode importar o módulo diretamente em seus scripts:
 Import-Module ".\WindowsNotification.psm1"
 
 # Usar as funções
-Show-WindowsNotification -Message "Mensagem" -Title "Título"
-Show-WindowsNotification -Message "Lembrete" -Title "Importante" -Sticky
+Show-NotificacaoWindows -Mensagem "Mensagem" -Titulo "Título"
+Show-NotificacaoWindows -Mensagem "Lembrete" -Titulo "Importante" -Persistente
 ```
 
 ## Métodos e Tecnologias Utilizadas
@@ -108,7 +108,7 @@ Show-WindowsNotification -Message "Lembrete" -Title "Importante" -Sticky
 **Registro Automático:**
 O sistema registra automaticamente o PowerShell em:
 ```
-HKCU:\SOFTWARE\Classes\AppUserModelId\PowerShell.Notifications
+HKCU:\SOFTWARE\Classes\AppUserModelId\PowerShell.Notificacoes
 ```
 
 ### 2. Notificações Balão (Método Fallback)
@@ -129,13 +129,13 @@ HKCU:\SOFTWARE\Classes\AppUserModelId\PowerShell.Notifications
 **Limitações:**
 - Aparência menos moderna
 - Não persiste no Centro de Ações
-- Duração limitada (máximo 30 segundos para modo sticky)
+- Duração limitada (máximo 30 segundos para modo persistente)
 
 ### 3. Estratégia de Fallback Múltiplo
 
 O sistema tenta várias abordagens em ordem de prioridade:
 
-1. **ID de App Registrado** - `PowerShell.Notifications` (criado automaticamente)
+1. **ID de App Registrado** - `PowerShell.Notificacoes` (criado automaticamente)
 2. **IDs Nativos** - `Microsoft.Windows.PowerShell`, `Windows.PowerShell`
 3. **Windows Terminal** - Para usuários do Terminal moderno
 4. **Caminho Legacy** - Para instalações antigas do PowerShell
@@ -151,12 +151,12 @@ O sistema tenta várias abordagens em ordem de prioridade:
 </toast>
 ```
 
-**Notificações Persistentes (Sticky):**
+**Notificações Persistentes:**
 ```xml
 <toast scenario="reminder" activationType="foreground">
   <visual>...</visual>
   <actions>
-    <action activationType="system" arguments="dismiss" content="Close"/>
+    <action activationType="system" arguments="dismiss" content="Fechar"/>
   </actions>
   <audio silent="false"/>
 </toast>
@@ -191,7 +191,7 @@ Se as notificações toast não aparecerem:
 
 2. **Tentar o fallback:**
    ```powershell
-   .\Show-Popup.ps1 "Teste" "Fallback" -UseFallback
+   .\Show-Popup.ps1 "Teste" "Fallback" -UsarFallback
    ```
 
 3. **Executar diagnóstico:**
@@ -206,13 +206,13 @@ Se as notificações toast não aparecerem:
 .\Show-Popup.ps1 "Backup concluído com sucesso!" "Sistema de Backup"
 
 # Lembrete persistente
-.\Show-Popup.ps1 "Reunião em 15 minutos" "Agenda" -Sticky
+.\Show-Popup.ps1 "Reunião em 15 minutos" "Agenda" -Persistente
 
 # Alerta crítico com fallback garantido
-.\Show-Popup.ps1 "Espaço em disco baixo!" "Alerta do Sistema" -UseFallback -Sticky
+.\Show-Popup.ps1 "Espaço em disco baixo!" "Alerta do Sistema" -UsarFallback -Persistente
 
 # Notificação de status de longa duração
-.\Show-Popup.ps1 "Download de 10GB em progresso..." "Download Manager" -Sticky
+.\Show-Popup.ps1 "Download de 10GB em progresso..." "Download Manager" -Persistente
 ```
 
 Este sistema fornece uma solução completa e robusta para notificações em scripts PowerShell, adequada tanto para uso pessoal quanto em ambientes corporativos.
