@@ -1,67 +1,67 @@
-Write-Host "=== Windows Notification Settings Diagnostics ===" -ForegroundColor Cyan
+Write-Host "=== Diagnóstico das Configurações de Notificação do Windows ===" -ForegroundColor Cyan
 
-# Check global notification settings
-Write-Host "`n1. Global Notification Settings:" -ForegroundColor Yellow
+# Verificar configurações globais de notificação
+Write-Host "`n1. Configurações Globais de Notificação:" -ForegroundColor Yellow
 try {
-    $toastEnabled = Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -ErrorAction SilentlyContinue
-    if ($toastEnabled) {
-        if ($toastEnabled.ToastEnabled -eq 1) {
-            Write-Host "   ✓ Toast notifications are ENABLED" -ForegroundColor Green
+    $toastHabilitado = Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -ErrorAction SilentlyContinue
+    if ($toastHabilitado) {
+        if ($toastHabilitado.ToastEnabled -eq 1) {
+            Write-Host "   ✓ Notificações toast estão HABILITADAS" -ForegroundColor Green
         } else {
-            Write-Host "   ✗ Toast notifications are DISABLED" -ForegroundColor Red
+            Write-Host "   ✗ Notificações toast estão DESABILITADAS" -ForegroundColor Red
         }
     } else {
-        Write-Host "   ? Toast notification setting not found (may be enabled by default)" -ForegroundColor Yellow
+        Write-Host "   ? Configuração de notificação toast não encontrada (pode estar habilitada por padrão)" -ForegroundColor Yellow
     }
 } catch {
-    Write-Host "   ✗ Could not check toast notification settings" -ForegroundColor Red
+    Write-Host "   ✗ Não foi possível verificar as configurações de notificação toast" -ForegroundColor Red
 }
 
-# Check Focus Assist
-Write-Host "`n2. Focus Assist Settings:" -ForegroundColor Yellow
+# Verificar Assistente de Foco
+Write-Host "`n2. Configurações do Assistente de Foco:" -ForegroundColor Yellow
 try {
-    $focusAssistPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount"
-    $focusAssist = Get-ChildItem $focusAssistPath -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*windows.data.notifications.quiethours*" }
-    if ($focusAssist) {
-        Write-Host "   ? Focus Assist settings found - may be active" -ForegroundColor Yellow
+    $caminhoAssistenteFoco = "HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount"
+    $assistenteFoco = Get-ChildItem $caminhoAssistenteFoco -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*windows.data.notifications.quiethours*" }
+    if ($assistenteFoco) {
+        Write-Host "   ? Configurações do Assistente de Foco encontradas - pode estar ativo" -ForegroundColor Yellow
     } else {
-        Write-Host "   ✓ Focus Assist likely not blocking notifications" -ForegroundColor Green
+        Write-Host "   ✓ Assistente de Foco provavelmente não está bloqueando notificações" -ForegroundColor Green
     }
 } catch {
-    Write-Host "   ? Could not determine Focus Assist status" -ForegroundColor Yellow
+    Write-Host "   ? Não foi possível determinar o status do Assistente de Foco" -ForegroundColor Yellow
 }
 
-# Check if PowerShell is registered for notifications
-Write-Host "`n3. PowerShell Notification Registration:" -ForegroundColor Yellow
-$regPath = "HKCU:\SOFTWARE\Classes\AppUserModelId\PowerShell.Notifications"
-if (Test-Path $regPath) {
-    Write-Host "   ✓ PowerShell is registered for notifications" -ForegroundColor Green
+# Verificar se o PowerShell está registrado para notificações
+Write-Host "`n3. Registro de Notificações do PowerShell:" -ForegroundColor Yellow
+$caminhoRegistro = "HKCU:\SOFTWARE\Classes\AppUserModelId\PowerShell.Notificacoes"
+if (Test-Path $caminhoRegistro) {
+    Write-Host "   ✓ PowerShell está registrado para notificações" -ForegroundColor Green
 } else {
-    Write-Host "   ✗ PowerShell is NOT registered for notifications" -ForegroundColor Red
-    Write-Host "     Will attempt to register when running notifications" -ForegroundColor Gray
+    Write-Host "   ✗ PowerShell NÃO está registrado para notificações" -ForegroundColor Red
+    Write-Host "     Tentará registrar ao executar notificações" -ForegroundColor Gray
 }
 
-# Test Windows Runtime API availability
-Write-Host "`n4. Windows Runtime API Test:" -ForegroundColor Yellow
+# Testar disponibilidade da API Windows Runtime
+Write-Host "`n4. Teste da API Windows Runtime:" -ForegroundColor Yellow
 try {
     [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-    Write-Host "   ✓ Windows Runtime notification APIs are available" -ForegroundColor Green
+    Write-Host "   ✓ APIs de notificação do Windows Runtime estão disponíveis" -ForegroundColor Green
 } catch {
-    Write-Host "   ✗ Windows Runtime notification APIs are NOT available" -ForegroundColor Red
-    Write-Host "     Error: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "   ✗ APIs de notificação do Windows Runtime NÃO estão disponíveis" -ForegroundColor Red
+    Write-Host "     Erro: $($_.Exception.Message)" -ForegroundColor Red
 }
 
-# Check Windows version
-Write-Host "`n5. Windows Version:" -ForegroundColor Yellow
-$version = [Environment]::OSVersion.Version
-if ($version.Major -ge 10) {
-    Write-Host "   ✓ Windows 10/11 detected (supports toast notifications)" -ForegroundColor Green
+# Verificar versão do Windows
+Write-Host "`n5. Versão do Windows:" -ForegroundColor Yellow
+$versao = [Environment]::OSVersion.Version
+if ($versao.Major -ge 10) {
+    Write-Host "   ✓ Windows 10/11 detectado (suporta notificações toast)" -ForegroundColor Green
 } else {
-    Write-Host "   ✗ Older Windows version detected (may not support toast notifications)" -ForegroundColor Red
+    Write-Host "   ✗ Versão mais antiga do Windows detectada (pode não suportar notificações toast)" -ForegroundColor Red
 }
 
-Write-Host "`n=== Recommendations ===" -ForegroundColor Cyan
-Write-Host "1. If toast notifications are disabled, enable them in Settings > System > Notifications" 
-Write-Host "2. If Focus Assist is on, disable it or add PowerShell as an exception"
-Write-Host "3. Try running the notification script - it will attempt to register PowerShell automatically"
-Write-Host "4. If toast notifications still fail, use the -UseFallback parameter for reliable balloon notifications"
+Write-Host "`n=== Recomendações ===" -ForegroundColor Cyan
+Write-Host "1. Se as notificações toast estiverem desabilitadas, habilite em Configurações > Sistema > Notificações" 
+Write-Host "2. Se o Assistente de Foco estiver ativo, desabilite ou adicione o PowerShell como exceção"
+Write-Host "3. Tente executar o script de notificação - ele tentará registrar o PowerShell automaticamente"
+Write-Host "4. Se as notificações toast ainda falharem, use o parâmetro -UsarFallback para notificações balão confiáveis"

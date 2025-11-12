@@ -1,58 +1,58 @@
-function Register-PowerShellForNotifications {
+function Registrar-PowerShellParaNotificacoes {
     [CmdletBinding()]
     param()
     
     try {
-        # Check if we can register PowerShell in the registry for notifications
-        $regPath = "HKCU:\SOFTWARE\Classes\AppUserModelId"
-        $appId = "PowerShell.Notifications"
-        $appPath = "$regPath\$appId"
+        # Verificar se podemos registrar o PowerShell no registro para notificações
+        $caminhoRegistro = "HKCU:\SOFTWARE\Classes\AppUserModelId"
+        $idAplicativo = "PowerShell.Notificacoes"
+        $caminhoAplicativo = "$caminhoRegistro\$idAplicativo"
         
-        if (-not (Test-Path $regPath)) {
-            New-Item -Path $regPath -Force | Out-Null
+        if (-not (Test-Path $caminhoRegistro)) {
+            New-Item -Path $caminhoRegistro -Force | Out-Null
         }
         
-        if (-not (Test-Path $appPath)) {
-            New-Item -Path $appPath -Force | Out-Null
-            Set-ItemProperty -Path $appPath -Name "DisplayName" -Value "PowerShell Notifications"
-            Set-ItemProperty -Path $appPath -Name "IconUri" -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-            Write-Verbose "Registered PowerShell for notifications"
-            return $appId
+        if (-not (Test-Path $caminhoAplicativo)) {
+            New-Item -Path $caminhoAplicativo -Force | Out-Null
+            Set-ItemProperty -Path $caminhoAplicativo -Name "DisplayName" -Value "Notificações PowerShell"
+            Set-ItemProperty -Path $caminhoAplicativo -Name "IconUri" -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+            Write-Verbose "PowerShell registrado para notificações"
+            return $idAplicativo
         }
         
-        return $appId
+        return $idAplicativo
     }
     catch {
-        Write-Verbose "Could not register PowerShell for notifications: $($_.Exception.Message)"
+        Write-Verbose "Não foi possível registrar o PowerShell para notificações: $($_.Exception.Message)"
         return $null
     }
 }
 
-function Show-WindowsNotification {
+function Exibir-NotificacaoWindows {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Message,
+        [string]$Mensagem,
         
         [Parameter(Mandatory = $false)]
-        [string]$Title = "Notification",
+        [string]$Titulo = "Notificação",
         
         [Parameter(Mandatory = $false)]
-        [switch]$UseFallback,
+        [switch]$UsarFallback,
         
         [Parameter(Mandatory = $false)]
-        [switch]$Sticky
+        [switch]$Persistente
     )
     
-    # First try the modern Toast notification approach
-    if (-not $UseFallback) {
+    # Primeiro tenta o método de notificação Toast moderna
+    if (-not $UsarFallback) {
         try {
-            Write-Verbose "Attempting modern toast notification..."
+            Write-Verbose "Tentando notificação toast moderna..."
             
-            # Check if notifications are enabled
-            $notificationSetting = Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -ErrorAction SilentlyContinue
-            if ($notificationSetting -and $notificationSetting.ToastEnabled -eq 0) {
-                Write-Warning "Windows notifications are disabled in system settings"
+            # Verificar se as notificações estão habilitadas
+            $configuracaoNotificacao = Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -ErrorAction SilentlyContinue
+            if ($configuracaoNotificacao -and $configuracaoNotificacao.ToastEnabled -eq 0) {
+                Write-Warning "Notificações do Windows estão desabilitadas nas configurações do sistema"
             }
             
             Add-Type -AssemblyName System.Windows.Forms
@@ -60,13 +60,13 @@ function Show-WindowsNotification {
             [Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
             [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
 
-            # Try to register PowerShell for notifications first
-            $registeredAppId = Register-PowerShellForNotifications
+            # Primeiro tenta registrar o PowerShell para notificações
+            $idAplicativoRegistrado = Registrar-PowerShellParaNotificacoes
             
-            # Try multiple application IDs in order of preference
-            $appIds = @()
-            if ($registeredAppId) { $appIds += $registeredAppId }
-            $appIds += @(
+            # Tenta múltiplos IDs de aplicativo em ordem de preferência
+            $idsAplicativo = @()
+            if ($idAplicativoRegistrado) { $idsAplicativo += $idAplicativoRegistrado }
+            $idsAplicativo += @(
                 "Microsoft.Windows.PowerShell",
                 "Windows.PowerShell", 
                 "PowerShell",
@@ -74,20 +74,20 @@ function Show-WindowsNotification {
                 "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe"
             )
             
-            $successfulAppId = $null
+            $idAplicativoSucesso = $null
             
-            # Create different templates for sticky vs normal notifications
-            if ($Sticky) {
+            # Criar templates diferentes para notificações persistentes vs normais
+            if ($Persistente) {
                 $template = @"
 <toast scenario="reminder" activationType="foreground">
     <visual>
         <binding template="ToastGeneric">
-            <text>$([System.Security.SecurityElement]::Escape($Title))</text>
-            <text>$([System.Security.SecurityElement]::Escape($Message))</text>
+            <text>$([System.Security.SecurityElement]::Escape($Titulo))</text>
+            <text>$([System.Security.SecurityElement]::Escape($Mensagem))</text>
         </binding>
     </visual>
     <actions>
-        <action activationType="system" arguments="dismiss" content="Close"/>
+        <action activationType="system" arguments="dismiss" content="Fechar"/>
     </actions>
     <audio silent="false"/>
 </toast>
@@ -97,8 +97,8 @@ function Show-WindowsNotification {
 <toast activationType="foreground">
     <visual>
         <binding template="ToastGeneric">
-            <text>$([System.Security.SecurityElement]::Escape($Title))</text>
-            <text>$([System.Security.SecurityElement]::Escape($Message))</text>
+            <text>$([System.Security.SecurityElement]::Escape($Titulo))</text>
+            <text>$([System.Security.SecurityElement]::Escape($Mensagem))</text>
         </binding>
     </visual>
     <audio silent="false"/>
@@ -106,77 +106,77 @@ function Show-WindowsNotification {
 "@
             }
 
-            # Try each app ID until one works
-            foreach ($appId in $appIds) {
+            # Tenta cada ID de aplicativo até que um funcione
+            foreach ($idAplicativo in $idsAplicativo) {
                 try {
-                    Write-Verbose "Trying app ID: $appId"
+                    Write-Verbose "Tentando ID do aplicativo: $idAplicativo"
                     
                     $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
                     $xml.LoadXml($template)
                     
                     $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
                     
-                    # Only set expiration time for non-sticky notifications
-                    if (-not $Sticky) {
+                    # Só define tempo de expiração para notificações não persistentes
+                    if (-not $Persistente) {
                         $toast.ExpirationTime = [DateTimeOffset]::Now.AddMinutes(5)
                     }
                     
-                    $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($appId)
-                    $notifier.Show($toast)
+                    $notificador = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($idAplicativo)
+                    $notificador.Show($toast)
                     
-                    $successfulAppId = $appId
+                    $idAplicativoSucesso = $idAplicativo
                     break
                 }
                 catch {
-                    Write-Verbose "App ID $appId failed: $($_.Exception.Message)"
+                    Write-Verbose "ID do aplicativo $idAplicativo falhou: $($_.Exception.Message)"
                     continue
                 }
             }
             
-            if ($successfulAppId) {
-                # Wait a moment to see if it actually appears
+            if ($idAplicativoSucesso) {
+                # Aguarda um momento para ver se realmente aparece
                 Start-Sleep -Milliseconds 500
-                Write-Verbose "Toast notification sent successfully with app ID '$successfulAppId': $Title - $Message"
+                Write-Verbose "Notificação toast enviada com sucesso com ID do aplicativo '$idAplicativoSucesso': $Titulo - $Mensagem"
                 return $true
             } else {
-                throw "All app IDs failed for toast notification"
+                throw "Todos os IDs de aplicativo falharam para notificação toast"
             }
         }
         catch {
-            Write-Warning "Toast notification failed: $($_.Exception.Message). Trying fallback method..."
+            Write-Warning "Notificação toast falhou: $($_.Exception.Message). Tentando método fallback..."
         }
     }
     
-    # Fallback: Use Windows Forms NotifyIcon (system tray balloon)
+    # Fallback: Usar Windows Forms NotifyIcon (balão da bandeja do sistema)
     try {
-        Write-Verbose "Using system tray balloon notification fallback..."
+        Write-Verbose "Usando fallback de notificação balão da bandeja do sistema..."
         
         Add-Type -AssemblyName System.Windows.Forms
         Add-Type -AssemblyName System.Drawing
         
-        $icon = New-Object System.Windows.Forms.NotifyIcon
-        $icon.Icon = [System.Drawing.SystemIcons]::Information
-        $icon.Visible = $true
+        $icone = New-Object System.Windows.Forms.NotifyIcon
+        $icone.Icon = [System.Drawing.SystemIcons]::Information
+        $icone.Visible = $true
         
-        # Balloon notifications can't be truly sticky, but we can make them last longer
-        $duration = if ($Sticky) { 30000 } else { 5000 }  # 30 seconds vs 5 seconds
-        $icon.ShowBalloonTip($duration, $Title, $Message, [System.Windows.Forms.ToolTipIcon]::Info)
+        # Notificações balão não podem ser verdadeiramente persistentes, mas podemos fazê-las durar mais
+        $duracao = if ($Persistente) { 30000 } else { 5000 }  # 30 segundos vs 5 segundos
+        $icone.ShowBalloonTip($duracao, $Titulo, $Mensagem, [System.Windows.Forms.ToolTipIcon]::Info)
         
-        # Clean up after a delay
+        # Limpar após um tempo
         Start-Sleep -Seconds 1
-        $icon.Dispose()
+        $icone.Dispose()
         
-        if ($Sticky) {
-            Write-Verbose "Long-duration balloon notification sent (30s): $Title - $Message"
+        if ($Persistente) {
+            Write-Verbose "Notificação balão de longa duração enviada (30s): $Titulo - $Mensagem"
         } else {
-            Write-Verbose "Balloon notification sent successfully: $Title - $Message"
+            Write-Verbose "Notificação balão enviada com sucesso: $Titulo - $Mensagem"
         }
         return $true
     }
     catch {
-        Write-Error "All notification methods failed. Last error: $($_.Exception.Message)"
+        Write-Error "Todos os métodos de notificação falharam. Último erro: $($_.Exception.Message)"
         return $false
     }
 }
 
-Export-ModuleMember -Function Show-WindowsNotification, Register-PowerShellForNotifications
+Export-ModuleMember -Function Exibir-NotificacaoWindows, Registrar-PowerShellParaNotificacoes

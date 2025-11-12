@@ -1,39 +1,39 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "The message to display in the notification")]
-    [string]$Message,
+    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "A mensagem a ser exibida na notificação")]
+    [string]$Mensagem,
     
-    [Parameter(Mandatory = $false, Position = 1, HelpMessage = "The title of the notification")]
-    [string]$Title = "Notification",
+    [Parameter(Mandatory = $false, Position = 1, HelpMessage = "O título da notificação")]
+    [string]$Titulo = "Notificação",
     
-    [Parameter(Mandatory = $false, HelpMessage = "Use fallback system tray balloon instead of toast notification")]
-    [switch]$UseFallback,
+    [Parameter(Mandatory = $false, HelpMessage = "Usar balão da bandeja do sistema como fallback em vez de notificação toast")]
+    [switch]$UsarFallback,
     
-    [Parameter(Mandatory = $false, HelpMessage = "Make the notification sticky (only goes away when manually dismissed)")]
-    [switch]$Sticky
+    [Parameter(Mandatory = $false, HelpMessage = "Tornar a notificação persistente (só desaparece quando dispensada manualmente)")]
+    [switch]$Persistente
 )
 
 $ErrorActionPreference = "Stop"
 
 try {
-    $ModulePath = Join-Path $PSScriptRoot "WindowsNotification.psm1"
+    $CaminhoModulo = Join-Path $PSScriptRoot "WindowsNotification.psm1"
     
-    if (-not (Test-Path $ModulePath)) {
-        throw "WindowsNotification module not found at: $ModulePath"
+    if (-not (Test-Path $CaminhoModulo)) {
+        throw "Módulo WindowsNotification não encontrado em: $CaminhoModulo"
     }
     
-    Import-Module $ModulePath -Force
+    Import-Module $CaminhoModulo -Force
     
-    $result = Show-WindowsNotification -Message $Message -Title $Title -UseFallback:$UseFallback -Sticky:$Sticky
+    $resultado = Exibir-NotificacaoWindows -Mensagem $Mensagem -Titulo $Titulo -UsarFallback:$UsarFallback -Persistente:$Persistente
     
-    if ($result) {
-        Write-Host "Notification sent successfully!" -ForegroundColor Green
+    if ($resultado) {
+        Write-Host "Notificação enviada com sucesso!" -ForegroundColor Green
     } else {
-        Write-Host "Notification failed to send." -ForegroundColor Red
+        Write-Host "Falha ao enviar notificação." -ForegroundColor Red
         exit 1
     }
 }
 catch {
-    Write-Error "Error sending notification: $($_.Exception.Message)"
+    Write-Error "Erro ao enviar notificação: $($_.Exception.Message)"
     exit 1
 }
